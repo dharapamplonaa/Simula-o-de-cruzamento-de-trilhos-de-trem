@@ -1,7 +1,10 @@
 # Simula-o-de-cruzamento-de-trilhos-de-trem
 
 
-Este projeto implementa uma simulação de um cruzamento de uma via ferroviária com uma via de carros utilizando o FreeRTOS. O sistema garante a segurança dos veículos e trens no cruzamento, controlando uma cancela e semáforos com base na aproximação de trens.
+Este projeto implementa uma simulação de um cruzamento de uma via ferroviária com uma via de carros utilizando o FreeRTOS. O sistema garante a segurança dos veículos e trens no cruzamento, controlando uma cancela e semáforos com base na aproximação de trens. O cenário considerado é ilustrado na figura a seguir.
+<p align="center">
+  <img src="imgs/3.png" width="300" ">
+</p>
 
 ## Funcionalidades
 
@@ -29,3 +32,13 @@ O projeto é estruturado em várias tasks do FreeRTOS que gerenciam diferentes p
 Para executar este projeto, você precisará de um ambiente capaz de compilar e executar código C com FreeRTOS. Isso pode ser configurado em uma IDE como o Visual Studio Code com extensões para C/C++ e suporte para compilar projetos FreeRTOS.
 
 ## Resultados esperados
+
+Após processar o arquivo de entrada, a saída esperada é exibida abaixo: 
+
+<p align="center">
+  <img src="imgs/1.jpeg" width="400" ">
+  <br>
+  <img src="imgs/2.jpeg" width="400" ">
+
+</p>
+
