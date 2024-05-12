@@ -66,10 +66,10 @@ typedef enum dir {
 } Direcao;
 
 
-// Declarar buffers de mem�ria est�tica para as tasks e sem�foros
+// Declarar buffers de memória estática para as tasks e semáforos
 
 /*-----------------------------------------------------------*/
-// Declarar buffers de mem�ria est�tica para as tasks e sem�foros
+// Declarar buffers de memória estática para as tasks e semáforos
 StaticTask_t xTaskBuffer[6];  // Increased buffer for additional tasks
 StackType_t xStack[6][configMINIMAL_STACK_SIZE];
 StaticSemaphore_t xSemaphoreBuffer[4];
@@ -79,15 +79,16 @@ SemaphoreHandle_t semaforoSync;
 
 
 /*-----------------------------------------------------------*/
-// Sem�foros e Mutexes
-// Semaphores and Mutexes
+// Semáforos e Mutexes
 SemaphoreHandle_t semaforoCruzamentoNorteSul;
 SemaphoreHandle_t semaforoCruzamentoLesteOeste; // Additional semaphore for East-West cars
 SemaphoreHandle_t mutexCancela;
+
+
 /*-----------------------------------------------------------*/
 // Estados
-volatile bool cancelaFechada = 0; // Declara��o da vari�vel global
-volatile bool semaforoVerde = false; // Verdadeiro se o sem�foro estiver verde para os carros
+volatile bool cancelaFechada = 0; // Declaração da variável global
+volatile bool semaforoVerde = false; // Verdadeiro se o semáforo estiver verde para os carros
 
 
 /*
@@ -118,7 +119,7 @@ static void prvStartCheckTask( void );
 static void prvCheckTask( void *pvParameters );
 
 /*-----------------------------------------------------------*/
-// Prot�tipos das fun��es das tasks
+// Protótipos das funções das tasks
 void TaskTrem(void* pvParameters);
 void TaskCarro(void* pvParameters);
 void TaskCancela(void* pvParameters);
@@ -127,18 +128,22 @@ void TaskSemaforo(void* pvParameters);
 
 
 int main(void) {
-
+	// Criação de um semáforo binário para sincronização e sua liberação inicial
 	semaforoSync = xSemaphoreCreateBinaryStatic(&xSemaphoreBufferSemaforoSync);
-	xSemaphoreGive(semaforoSync);  // Inicia com o sem�foro dispon�vel
+	xSemaphoreGive(semaforoSync);  // Inicia com o semáforo disponível
 
-
+	// Criação e liberação inicial dos semáforos de cruzamento
 	semaforoCruzamentoNorteSul = xSemaphoreCreateBinaryStatic(&xSemaphoreBuffer[0]);
-	semaforoCruzamentoLesteOeste = xSemaphoreCreateBinaryStatic(&xSemaphoreBuffer[1]); // Initialize semaphore for East-West
+	semaforoCruzamentoLesteOeste = xSemaphoreCreateBinaryStatic(&xSemaphoreBuffer[1]); 
+	
+	// Criação de um mutex para gerenciar o acesso à cancela
 	mutexCancela = xSemaphoreCreateMutexStatic(&xSemaphoreBuffer[2]);
 
+	
 	xSemaphoreGive(semaforoCruzamentoNorteSul);
-	xSemaphoreGive(semaforoCruzamentoLesteOeste); // Enable East-West traffic initially
+	xSemaphoreGive(semaforoCruzamentoLesteOeste); 
 
+	// Criação das tasks com suas respectivas prioridades e parâmetros
 	xTaskCreateStatic(TaskTrem, "Trem Norte-Sul", configMINIMAL_STACK_SIZE, (void*)NORTE, 1, xStack[0], &xTaskBuffer[0]);
 	xTaskCreateStatic(TaskTrem, "Trem Sul-Norte", configMINIMAL_STACK_SIZE, (void*)SUL, 1, xStack[1], &xTaskBuffer[1]);
 	xTaskCreateStatic(TaskCarro, "Carro Leste-Oeste", configMINIMAL_STACK_SIZE, (void*)LESTE, 1, xStack[2], &xTaskBuffer[2]);
@@ -146,6 +151,7 @@ int main(void) {
 	xTaskCreateStatic(TaskCancela, "Cancela", configMINIMAL_STACK_SIZE, NULL, 1, xStack[4], &xTaskBuffer[4]);
 	xTaskCreateStatic(TaskSemaforo, "Semaforo", configMINIMAL_STACK_SIZE, NULL, 1, xStack[5], &xTaskBuffer[5]);
 
+	// Inicia o escalonador do FreeRTOS
 	vTaskStartScheduler();
 	for (;;);
 	return 0;
@@ -153,26 +159,29 @@ int main(void) {
 
 /*----------------------------TREM-------------------------------*/
 void TaskTrem(void* pvParameters) {
-	Direcao dir = (Direcao)pvParameters;
+	
+	Direcao dir = (Direcao)pvParameters; // Interpreta o parâmetro recebido como a direção do trem
 	const char* dirName = (dir == NORTE) ? "Norte" : "Sul";
 	SemaphoreHandle_t semaforoCruzamento = (dir == NORTE) ? semaforoCruzamentoNorteSul : semaforoCruzamentoLesteOeste;
 
 	while (1) {
-		printf("Trem %s chegando.\n", dirName);
-		xSemaphoreTake(semaforoCruzamento, portMAX_DELAY);
+		printf("Trem %s chegando.\n", dirName);// Anuncia a chegada do trem
+		xSemaphoreTake(semaforoCruzamento, portMAX_DELAY);// Aguarda permissão para cruzar
+		// Aguarda permissão para operar a cancela
 		xSemaphoreTake(mutexCancela, portMAX_DELAY);
 		cancelaFechada = 1;
 		printf("Cancela fechando.\n");
+		// Libera o mutex da cancela após fechá-la
 		xSemaphoreGive(mutexCancela);
 		vTaskDelay(pdMS_TO_TICKS(5000)); // Simulando tempo de cruzamento
 
-		printf("Trem %s passou.\n", dirName);
-		xSemaphoreTake(mutexCancela, portMAX_DELAY);
+		printf("Trem %s passou.\n", dirName); // Anuncia que o trem passou
+		xSemaphoreTake(mutexCancela, portMAX_DELAY); // Toma novamente o mutex da cancela para abri-la
 		cancelaFechada = 0;
 		printf("Cancela abrindo.\n");
 		xSemaphoreGive(mutexCancela);
-		xSemaphoreGive(semaforoCruzamento);
-		vTaskDelay(pdMS_TO_TICKS(10000)); // Intervalo at� o pr�ximo trem
+		xSemaphoreGive(semaforoCruzamento);// Libera o semáforo para outros trens ou carros
+		vTaskDelay(pdMS_TO_TICKS(10000)); // Intervalo até o próximo trem
 	}
 }
 
@@ -183,21 +192,22 @@ void TaskTrem(void* pvParameters) {
 
 /*----------------------------CARRO-------------------------------*/
 void TaskCarro(void* pvParameters) {
+	 // Interpreta o parâmetro passado para determinar a direção do carro
 	Direcao dir = (Direcao)pvParameters;
-	const char* dirName = (dir == LESTE) ? "Leste" : "Oeste";
+	const char* dirName = (dir == LESTE) ? "Leste" : "Oeste";// Armazena o nome da direção para uso nas mensagens de log
 
 	while (1) {
 		xSemaphoreTake(mutexCancela, portMAX_DELAY);
 		if (semaforoVerde) {
-			printf("Carro do %s passando...\n", dirName);
+			printf("Carro do %s passando...\n", dirName);// Se o semáforo está verde, o carro pode passar
 			vTaskDelay(pdMS_TO_TICKS(1000)); // Simula o tempo para o carro cruzar
 			printf("Carro do %s passou.\n", dirName);
 		}
 		else {
-			printf("Carro do %s esperando, sem�foro vermelho.\n", dirName);
+			printf("Carro do %s esperando, semáforo vermelho.\n", dirName);
 		}
 		xSemaphoreGive(mutexCancela);
-		vTaskDelay(pdMS_TO_TICKS(2000)); // Intervalo at� o pr�ximo carro
+		vTaskDelay(pdMS_TO_TICKS(2000)); // Intervalo até o próximo carro
 	}
 }
 
@@ -223,12 +233,12 @@ void TaskCancela(void* pvParameters) {
 			}
 			lastState = cancelaFechada;
 			xSemaphoreGive(mutexCancela);
-			xSemaphoreGive(semaforoSync);  // Libera o sem�foro para atualiza��o
+			xSemaphoreGive(semaforoSync);  // Libera o semáforo para atualização
 		}
 		else {
 			xSemaphoreGive(mutexCancela);
 		}
-		vTaskDelay(pdMS_TO_TICKS(1000));  // Verifica��o menos frequente para evitar carga desnecess�ria
+		vTaskDelay(pdMS_TO_TICKS(1000));  // Verificação menos frequente para evitar carga desnecessária
 	}
 }
 
@@ -245,8 +255,8 @@ void TaskSemaforo(void* pvParameters) {
 	while (1) {
 		xSemaphoreTake(semaforoSync, portMAX_DELAY);  // Espera pelo sinal da TaskCancela
 		if (cancelaFechada != lastState) {
-			semaforoVerde = !cancelaFechada;  // Sem�foro verde quando a cancela n�o est� fechada
-			printf("Sem�foro para carros: %s.\n", semaforoVerde ? "Verde" : "Vermelho");
+			semaforoVerde = !cancelaFechada;  // Semáforo verde quando a cancela não está fechada
+			printf("Semáforo para carros: %s.\n", semaforoVerde ? "Verde" : "Vermelho");
 			lastState = cancelaFechada;
 		}
 	}
