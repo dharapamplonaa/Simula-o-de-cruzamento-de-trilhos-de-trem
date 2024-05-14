@@ -75,14 +75,6 @@ O projeto é estruturado em várias tasks do FreeRTOS que gerenciam diferentes p
 - **TaskCancela**: Controla a abertura e fechamento da cancela baseada na presença de trens.
 - **TaskSemaforo**: Atualiza o estado do semáforo para carros baseado no estado da cancela.
 
-## Tecnologias Utilizadas
-
-- **FreeRTOS**: Utilizado para gerenciamento de multitarefas.
-- **C**: Linguagem de programação usada para implementação do projeto.
-
-## Pré-requisitos
-
-Para executar este projeto, você precisará de um ambiente capaz de compilar e executar código C com FreeRTOS. Isso pode ser configurado em uma IDE como o Visual Studio Code com extensões para C/C++ e suporte para compilar projetos FreeRTOS.
 
 ## Resultados esperados
 
