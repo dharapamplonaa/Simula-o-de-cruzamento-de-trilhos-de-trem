@@ -1,5 +1,7 @@
 # Simulação de cruzamento de trilhos de trem
 
+Link do Youtube [Link](https://youtu.be/EQorYHqA1O4)
+
 Este projeto implementa uma simulação de um cruzamento de uma via ferroviária com uma via de carros utilizando o FreeRTOS. O sistema garante a segurança dos veículos e trens no cruzamento, controlando uma cancela e semáforos com base na aproximação de trens. O cenário considerado é ilustrado na figura a seguir.
 <p align="center">
   <img src="imgs/3.png" width="300" ">
